@@ -1,0 +1,7 @@
+{
+  "customers_reviewed": 10,
+  "highest_churn_probability": 0.1252159129631163,
+  "highest_predicted_clv": 25890.41622989857,
+  "highest_revenue_at_risk": 1424.518897454794,
+  "executive_summary": "The current customer portfolio shows a meaningful concentration of high-risk and high-value accounts that merit immediate action. The recommended workflow is to prioritize retention outreach for customers with elevated churn probability, high predicted CLV, and strong revenue-at-risk exposure."
+}

@@ -1,0 +1,1 @@
+The current customer portfolio shows a meaningful concentration of high-risk and high-value accounts that merit immediate action. The recommended workflow is to prioritize retention outreach for customers with elevated churn probability, high predicted CLV, and strong revenue-at-risk exposure.
