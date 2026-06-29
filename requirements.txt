@@ -1,5 +1,6 @@
 fastapi==0.116.1
 matplotlib==3.10.5
+python-multipart==0.0.20
 mysql-connector-python==9.4.0
 notebook==7.4.5
 numpy==2.3.2
