@@ -115,7 +115,7 @@ def generate_business_recommendation(row: Dict[str, Any]) -> str:
                     "content": prompt,
                 },
             ],
-            temperature=0.3,
+            temperature=0.2,
             max_tokens=500,
         )
 
