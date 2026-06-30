@@ -1,6 +1,12 @@
 
 ## 📌 Overview
 
+
+- Streamlit Community Cloud
+
+API_URL = "https://customer-intelligence-revenue-growth-platform-ea5pjfaayrverxr5.streamlit.app"
+
+
 The **Customer Intelligence & Revenue Growth Platform** is a full-stack AI-powered customer analytics application that helps businesses understand customer behavior, predict churn, estimate Customer Lifetime Value (CLV), quantify revenue at risk, and generate AI-powered retention strategies.
 
 The project combines **Machine Learning**, **Customer Analytics**, **FastAPI**, **Streamlit**, and **Large Language Models (Groq Llama 3.3)** into one end-to-end business intelligence platform.
@@ -485,53 +491,6 @@ The recommendation engine works for both:
 
 ---
 
-# 📸 Dashboard Preview
-
-> Add screenshots after deployment.
-
-Suggested screenshots:
-
-```
-Home Page
-
-Executive Dashboard
-
-Customer Explorer
-
-AI Recommendation
-
-Real-Time Prediction
-
-Executive Summary
-
-Swagger API Documentation
-```
-
-Example:
-
-```markdown
-## Home
-
-![Home](screenshots/home.png)
-
-## Executive Dashboard
-
-![Dashboard](screenshots/dashboard.png)
-
-## Customer Explorer
-
-![Customer Explorer](screenshots/customer_explorer.png)
-
-## Real-Time Prediction
-
-![Prediction](screenshots/prediction.png)
-
-## AI Recommendation
-
-![Recommendation](screenshots/recommendation.png)
-```
-
----
 
 # ⚙ Installation
 
@@ -642,12 +601,7 @@ Deploy FastAPI using:
 
 - Render
 
-
-Example:
-
-```
-https://customer-intelligence-api.onrender.com
-```
+"https://customer-intelligence-system-api.onrender.com"
 
 ---
 
@@ -657,23 +611,11 @@ Deploy Streamlit using:
 
 - Streamlit Community Cloud
 
-Update the backend URL in:
+API_URL = "https://customer-intelligence-revenue-growth-platform-ea5pjfaayrverxr5.streamlit.app"
 
-```text
-utils/api_client.py
-```
 
-Replace
 
-```python
-API_URL = "http://127.0.0.1:8000"
-```
 
-with
-
-```python
-API_URL = "https://your-fastapi-url.onrender.com"
-```
 
 ---
 
