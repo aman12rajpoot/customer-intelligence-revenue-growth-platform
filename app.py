@@ -687,9 +687,11 @@ elif page == "🤖 AI Recommendation":
 
         st.success("Recommendation Generated Successfully")
 
-        st.markdown(
-            st.session_state["recommendation"]
-        )
+        st.text_area(
+        "🤖 AI Business Recommendation",
+        value=st.session_state["recommendation"],
+        height=350,
+    )
 
 
     render_footer()
@@ -1118,10 +1120,13 @@ Pasted data belongs to {pasted_customer}
 
                 st.success("AI Recommendation Generated Successfully")
 
-                st.markdown(
-                    st.session_state["ai_recommendation"]
-                )
+                 
 
+                st.text_area(
+                    "🤖 AI Business Recommendation",
+                    value=st.session_state["ai_recommendation"],
+                    height=350,
+                )
 
                 
 
