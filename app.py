@@ -681,10 +681,7 @@ elif page == "🤖 AI Recommendation":
 
         st.success("Recommendation Generated Successfully")
 
-        st.markdown(
-            st.session_state["recommendation"],
-            unsafe_allow_html=False,
-        )
+        st.code(st.session_state["ai_recommendation"], language="markdown")
 
     render_footer()
 
@@ -1113,10 +1110,10 @@ Pasted data belongs to {pasted_customer}
 
                 st.success("Recommendation Generated Successfully")
 
-                st.markdown(
-                    st.session_state["recommendation"],
-                    unsafe_allow_html=False,
-                )
+
+                st.code(st.session_state["ai_recommendation"], language="markdown")
+
+              
 
 
         render_footer()
