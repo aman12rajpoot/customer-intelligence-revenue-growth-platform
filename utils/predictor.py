@@ -31,10 +31,10 @@ Business Output
 Author : Aman Rajpoot
 """
 
-from pathlib import Path
-from typing import Dict, Any
-
 import logging
+from pathlib import Path
+from typing import Any, Dict
+
 import joblib
 import pandas as pd
 
@@ -97,9 +97,7 @@ for model_path in required_models:
 
     if not model_path.exists():
 
-        raise FileNotFoundError(
-            f"Model file not found:\n{model_path}"
-        )
+        raise FileNotFoundError(f"Model file not found:\n{model_path}")
 
 # ==========================================================
 # Load Models
@@ -123,9 +121,7 @@ except Exception as e:
 
     logger.exception("Failed to load models.")
 
-    raise RuntimeError(
-        f"Unable to load ML models.\n{e}"
-    )
+    raise RuntimeError(f"Unable to load ML models.\n{e}")
 
 # ==========================================================
 # Revenue-at-Risk Thresholds
@@ -136,11 +132,10 @@ HIGH_RISK_THRESHOLD = 0.70
 MEDIUM_RISK_THRESHOLD = 0.40
 
 
-
-
 # ==========================================================
 # Customer Persona Prediction
 # ==========================================================
+
 
 def predict_persona(rfm_row: pd.DataFrame) -> str:
     """
@@ -154,33 +149,24 @@ def predict_persona(rfm_row: pd.DataFrame) -> str:
         "Monetary",
     ]
 
-    missing = [
-        col for col in required_columns
-        if col not in rfm_row.columns
-    ]
+    missing = [col for col in required_columns if col not in rfm_row.columns]
 
     if missing:
-        raise ValueError(
-            f"Missing columns for Persona Prediction: {missing}"
-        )
+        raise ValueError(f"Missing columns for Persona Prediction: {missing}")
 
     features = rfm_row[required_columns]
 
     scaled_features = persona_scaler.transform(features)
 
-    cluster = int(
-        persona_model.predict(scaled_features)[0]
-    )
+    cluster = int(persona_model.predict(scaled_features)[0])
 
-    return PERSONA_MAPPING.get(
-        cluster,
-        "Unknown Customer"
-    )
+    return PERSONA_MAPPING.get(cluster, "Unknown Customer")
 
 
 # ==========================================================
 # Churn Prediction
 # ==========================================================
+
 
 def predict_churn(
     prediction_df: pd.DataFrame,
@@ -197,27 +183,14 @@ def predict_churn(
         "Customer_Persona",
     ]
 
-    missing = [
-        col for col in required_columns
-        if col not in prediction_df.columns
-    ]
+    missing = [col for col in required_columns if col not in prediction_df.columns]
 
     if missing:
-        raise ValueError(
-            f"Missing columns for Churn Prediction: {missing}"
-        )
+        raise ValueError(f"Missing columns for Churn Prediction: {missing}")
 
-    churn_probability = float(
-        churn_pipeline.predict_proba(
-            prediction_df
-        )[0][1]
-    )
+    churn_probability = float(churn_pipeline.predict_proba(prediction_df)[0][1])
 
-    churn_prediction = int(
-        churn_pipeline.predict(
-            prediction_df
-        )[0]
-    )
+    churn_prediction = int(churn_pipeline.predict(prediction_df)[0])
 
     return {
         "Churn_Probability": round(
@@ -251,35 +224,25 @@ def predict_clv(
         "Customer_Persona",
     ]
 
-    missing = [
-        col for col in required_columns
-        if col not in prediction_df.columns
-    ]
+    missing = [col for col in required_columns if col not in prediction_df.columns]
 
     if missing:
-        raise ValueError(
-            f"Missing columns for CLV Prediction: {missing}"
-        )
+        raise ValueError(f"Missing columns for CLV Prediction: {missing}")
 
-    clv = float(
-        clv_pipeline.predict(
-            prediction_df
-        )[0]
-    )
+    clv = float(clv_pipeline.predict(prediction_df)[0])
 
     if CLV_LOG_TRANSFORM:
         import numpy as np
+
         clv = np.expm1(clv)
 
     return round(clv, 2)
 
 
-
-
-
 # ==========================================================
 # Revenue-at-Risk Calculation
 # ==========================================================
+
 
 def calculate_revenue_at_risk(
     churn_probability: float,
@@ -291,9 +254,7 @@ def calculate_revenue_at_risk(
     Revenue at Risk = Churn Probability × Predicted CLV
     """
 
-    revenue_at_risk = (
-        churn_probability * predicted_clv
-    )
+    revenue_at_risk = churn_probability * predicted_clv
 
     return round(
         revenue_at_risk,
@@ -304,6 +265,7 @@ def calculate_revenue_at_risk(
 # ==========================================================
 # Risk Category
 # ==========================================================
+
 
 def assign_risk_category(
     churn_probability: float,
@@ -325,6 +287,7 @@ def assign_risk_category(
 # Customer Action
 # ==========================================================
 
+
 def assign_customer_action(
     risk_category: str,
 ) -> str:
@@ -333,27 +296,18 @@ def assign_customer_action(
     """
 
     actions = {
-
-        "High Risk":
-            "Immediate retention campaign and personal follow-up.",
-
-        "Medium Risk":
-            "Offer personalized discounts and engagement campaign.",
-
-        "Low Risk":
-            "Maintain loyalty program and explore upsell opportunities.",
-
+        "High Risk": "Immediate retention campaign and personal follow-up.",
+        "Medium Risk": "Offer personalized discounts and engagement campaign.",
+        "Low Risk": "Maintain loyalty program and explore upsell opportunities.",
     }
 
-    return actions.get(
-        risk_category,
-        "Monitor customer behaviour."
-    )
+    return actions.get(risk_category, "Monitor customer behaviour.")
 
 
 # ==========================================================
 # Complete Prediction Pipeline
 # ==========================================================
+
 
 def predict_customer(
     transaction_df: pd.DataFrame,
@@ -370,51 +324,37 @@ def predict_customer(
     Dictionary containing prediction results.
     """
 
-    logger.info(
-        "Starting prediction pipeline..."
-    )
+    logger.info("Starting prediction pipeline...")
 
     # ------------------------------------------------------
     # Data Cleaning
     # ------------------------------------------------------
 
-    cleaned_df = clean_transaction_data(
-        transaction_df
-    )
+    cleaned_df = clean_transaction_data(transaction_df)
 
     if cleaned_df.empty:
 
-        raise ValueError(
-            "No valid transactions found after data cleaning."
-        )
+        raise ValueError("No valid transactions found after data cleaning.")
 
     # ------------------------------------------------------
     # Feature Engineering
     # ------------------------------------------------------
 
-    rfm_df = calculate_rfm(
-        cleaned_df
-    )
+    rfm_df = calculate_rfm(cleaned_df)
 
     if rfm_df.empty:
 
-        raise ValueError(
-            "No valid customer records found after feature engineering."
-        )
+        raise ValueError("No valid customer records found after feature engineering.")
 
     if len(rfm_df) > 1:
 
-        raise ValueError(
-            "Please upload transactions for one customer only."
-        )
+        raise ValueError("Please upload transactions for one customer only.")
 
     # ------------------------------------------------------
     # Persona Prediction
     # ------------------------------------------------------
 
-    persona = predict_persona(
-        rfm_df
-    )
+    persona = predict_persona(rfm_df)
 
     rfm_df["Customer_Persona"] = persona
 
@@ -436,130 +376,71 @@ def predict_customer(
     # Churn Prediction
     # ------------------------------------------------------
 
-    churn_results = predict_churn(
-        prediction_features
-    )
+    churn_results = predict_churn(prediction_features)
 
     # ------------------------------------------------------
     # CLV Prediction
     # ------------------------------------------------------
 
-    predicted_clv = predict_clv(
-        prediction_features
-    )
+    predicted_clv = predict_clv(prediction_features)
 
     # ------------------------------------------------------
     # Revenue-at-Risk
     # ------------------------------------------------------
 
     revenue_at_risk = calculate_revenue_at_risk(
-
         churn_results["Churn_Probability"],
-
         predicted_clv,
-
     )
 
     # ------------------------------------------------------
     # Risk Category
     # ------------------------------------------------------
 
-    risk_category = assign_risk_category(
-
-        churn_results["Churn_Probability"]
-
-    )
+    risk_category = assign_risk_category(churn_results["Churn_Probability"])
 
     # ------------------------------------------------------
     # Business Action
     # ------------------------------------------------------
 
-    customer_action = assign_customer_action(
-
-        risk_category
-
-    )
+    customer_action = assign_customer_action(risk_category)
 
     # ------------------------------------------------------
     # Final Result
     # ------------------------------------------------------
 
     result = {
-
-        "CustomerID":
-            int(
-                rfm_df.iloc[0]["CustomerID"]
-            ),
-
-        "Recency":
-            int(
-                rfm_df.iloc[0]["Recency"]
-            ),
-
-        "Frequency":
-            int(
-                rfm_df.iloc[0]["Frequency"]
-            ),
-
-        "Monetary":
-            round(
-                float(
-                    rfm_df.iloc[0]["Monetary"]
-                ),
-                2,
-            ),
-
-        "Average_Order_Value":
-            round(
-                float(
-                    rfm_df.iloc[0]["Average_Order_Value"]
-                ),
-                2,
-            ),
-
-        "Customer_Persona":
-            persona,
-
-        "Churn_Probability":
-            churn_results[
-                "Churn_Probability"
-            ],
-
-        "Churn_Prediction":
-            churn_results[
-                "Churn_Prediction"
-            ],
-
-        "Predicted_CLV":
-            predicted_clv,
-
-        "Revenue_at_Risk":
-            revenue_at_risk,
-
-        "Risk_Category":
-            risk_category,
-
-        "Customer_Action":
-            customer_action,
-
+        "CustomerID": int(rfm_df.iloc[0]["CustomerID"]),
+        "Recency": int(rfm_df.iloc[0]["Recency"]),
+        "Frequency": int(rfm_df.iloc[0]["Frequency"]),
+        "Monetary": round(
+            float(rfm_df.iloc[0]["Monetary"]),
+            2,
+        ),
+        "Average_Order_Value": round(
+            float(rfm_df.iloc[0]["Average_Order_Value"]),
+            2,
+        ),
+        "Customer_Persona": persona,
+        "Churn_Probability": churn_results["Churn_Probability"],
+        "Churn_Prediction": churn_results["Churn_Prediction"],
+        "Predicted_CLV": predicted_clv,
+        "Revenue_at_Risk": revenue_at_risk,
+        "Risk_Category": risk_category,
+        "Customer_Action": customer_action,
     }
 
-    logger.info(
-        "Prediction completed successfully."
-    )
+    logger.info("Prediction completed successfully.")
 
     logger.info(result)
 
     return result
 
 
-
-
-
-
 # ==========================================================
 # Load Transaction File
 # ==========================================================
+
 
 def load_transaction_file(file_path) -> pd.DataFrame:
     """
@@ -578,14 +459,13 @@ def load_transaction_file(file_path) -> pd.DataFrame:
 
         return pd.read_excel(file_path)
 
-    raise ValueError(
-        "Only CSV and Excel files are supported."
-    )
+    raise ValueError("Only CSV and Excel files are supported.")
 
 
 # ==========================================================
 # Batch Prediction
 # ==========================================================
+
 
 def predict_customers(
     transaction_df: pd.DataFrame,
@@ -596,15 +476,11 @@ def predict_customers(
 
     logger.info("Starting batch prediction...")
 
-    cleaned_df = clean_transaction_data(
-        transaction_df
-    )
+    cleaned_df = clean_transaction_data(transaction_df)
 
     if cleaned_df.empty:
 
-        raise ValueError(
-            "No valid transactions found after cleaning."
-        )
+        raise ValueError("No valid transactions found after cleaning.")
 
     customer_ids = cleaned_df["CustomerID"].unique()
 
@@ -612,23 +488,17 @@ def predict_customers(
 
     for customer_id in customer_ids:
 
-        customer_transactions = cleaned_df[
-            cleaned_df["CustomerID"] == customer_id
-        ]
+        customer_transactions = cleaned_df[cleaned_df["CustomerID"] == customer_id]
 
         try:
 
-            prediction = predict_customer(
-                customer_transactions
-            )
+            prediction = predict_customer(customer_transactions)
 
             results.append(prediction)
 
         except Exception as e:
 
-            logger.warning(
-                f"Skipping Customer {customer_id}: {e}"
-            )
+            logger.warning(f"Skipping Customer {customer_id}: {e}")
 
     logger.info(
         "Completed prediction for %d customers.",
@@ -641,6 +511,7 @@ def predict_customers(
 # ==========================================================
 # Export Predictions
 # ==========================================================
+
 
 def export_predictions(
     prediction_df: pd.DataFrame,
@@ -669,26 +540,15 @@ def export_predictions(
 
 if __name__ == "__main__":
 
-    TEST_DATA = (
-        ROOT_DIR
-        / "data"
-        / "raw"
-        / "Online Retail.xlsx"
-    )
+    TEST_DATA = ROOT_DIR / "data" / "raw" / "Online Retail.xlsx"
 
     if TEST_DATA.exists():
 
-        logger.info(
-            "Running Predictor Module..."
-        )
+        logger.info("Running Predictor Module...")
 
-        df = load_transaction_file(
-            TEST_DATA
-        )
+        df = load_transaction_file(TEST_DATA)
 
-        predictions = predict_customers(
-            df
-        )
+        predictions = predict_customers(df)
 
         logger.info(
             "Total Customers Predicted : %d",
@@ -700,21 +560,14 @@ if __name__ == "__main__":
             predictions.head(),
         )
 
-        OUTPUT_FILE = (
-            ROOT_DIR
-            / "data"
-            / "processed"
-            / "real_time_predictions.csv"
-        )
+        OUTPUT_FILE = ROOT_DIR / "data" / "processed" / "real_time_predictions.csv"
 
         export_predictions(
             predictions,
             OUTPUT_FILE,
         )
 
-        logger.info(
-            "Prediction completed successfully."
-        )
+        logger.info("Prediction completed successfully.")
 
     else:
 

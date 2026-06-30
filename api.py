@@ -1,24 +1,14 @@
-from fastapi import UploadFile, File
-
-from utils.predictor import (
-    load_transaction_file,
-    predict_customers,
-)
-
-
-
-
-
 from contextlib import asynccontextmanager
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 
 from utils.groq_utils import generate_business_recommendation
+from utils.predictor import load_transaction_file, predict_customers
 
 
 @asynccontextmanager
@@ -56,9 +46,13 @@ def load_data() -> pd.DataFrame:
     df = pd.read_csv(DATA_PATH)
     df = df.copy()
     df["CustomerID"] = df["CustomerID"].astype(int)
-    df["Churn_Probability"] = pd.to_numeric(df["Churn_Probability"], errors="coerce").fillna(0)
+    df["Churn_Probability"] = pd.to_numeric(
+        df["Churn_Probability"], errors="coerce"
+    ).fillna(0)
     df["Predicted_CLV"] = pd.to_numeric(df["Predicted_CLV"], errors="coerce").fillna(0)
-    df["Revenue_at_Risk"] = pd.to_numeric(df["Revenue_at_Risk"], errors="coerce").fillna(0)
+    df["Revenue_at_Risk"] = pd.to_numeric(
+        df["Revenue_at_Risk"], errors="coerce"
+    ).fillna(0)
     df["Risk_Category"] = df["Risk_Category"].fillna("Unknown")
     df["Customer_Action"] = df["Customer_Action"].fillna("Monitor")
     if "Segment" not in df.columns:
@@ -77,6 +71,17 @@ class CustomerSummary(BaseModel):
     Revenue_at_Risk: float
     Risk_Category: str
     Customer_Action: str
+
+
+class Transaction(BaseModel):
+    InvoiceNo: str
+    StockCode: str
+    Description: str
+    Quantity: int
+    InvoiceDate: str
+    UnitPrice: float
+    CustomerID: int
+    Country: str
 
 
 @app.get("/", tags=["General"])
@@ -106,8 +111,14 @@ def dashboard() -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return {
         "total_customers": len(df),
-        "high_risk": int(df["Risk_Category"].str.contains("High|Critical", case=False, na=False).sum()),
-        "critical": int(df["Risk_Category"].str.contains("Critical", case=False, na=False).sum()),
+        "high_risk": int(
+            df["Risk_Category"]
+            .str.contains("High|Critical", case=False, na=False)
+            .sum()
+        ),
+        "critical": int(
+            df["Risk_Category"].str.contains("Critical", case=False, na=False).sum()
+        ),
         "average_clv": round(float(df["Predicted_CLV"].mean()), 2),
         "total_revenue_at_risk": round(float(df["Revenue_at_Risk"].sum()), 2),
         "average_churn": round(float(df["Churn_Probability"].mean()), 3),
@@ -156,7 +167,11 @@ def top_risk() -> List[Dict[str, Any]]:
         df = load_data()
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
-    return df.sort_values("Revenue_at_Risk", ascending=False).head(10).to_dict(orient="records")
+    return (
+        df.sort_values("Revenue_at_Risk", ascending=False)
+        .head(10)
+        .to_dict(orient="records")
+    )
 
 
 @app.post("/recommendation/{customer_id}", tags=["AI"])
@@ -178,17 +193,41 @@ def recommendation(customer_id: int) -> Dict[str, Any]:
     }
 
 
+class PredictionResult(BaseModel):
+    CustomerID: int
+    Churn_Probability: float
+    Predicted_CLV: float
+    Revenue_at_Risk: float
+    Risk_Category: str
+    Customer_Action: str
+
+
+@app.post(
+    "/recommendation-json",
+    tags=["AI"],
+    summary="Generate AI Recommendation from Prediction",
+)
+def recommendation_json(
+    prediction: PredictionResult,
+) -> Dict[str, Any]:
+
+    recommendation = generate_business_recommendation(prediction.model_dump())
+
+    return {"recommendation": recommendation}
+
+
+ROOT = Path(__file__).resolve().parent
+
+
+REPORTS_DIR = ROOT / "reports"
+
+
 @app.get("/executive-summary", tags=["AI"])
 def get_summary() -> Dict[str, str]:
-    path = DATA_DIR / "executive_summary.md"
+    path = REPORTS_DIR / "executive_summary.md"
     if not path.exists():
         raise HTTPException(status_code=404, detail="Executive summary not found")
     return {"summary": path.read_text(encoding="utf-8")}
-
-
-
-
-
 
 
 @app.post(
@@ -219,19 +258,36 @@ async def predict(file: UploadFile = File(...)):
 
             f.write(await file.read())
 
-        transaction_df = load_transaction_file(
-            temp_path
-        )
+        transaction_df = load_transaction_file(temp_path)
 
-        prediction_df = predict_customers(
-            transaction_df
-        )
+        prediction_df = predict_customers(transaction_df)
 
         temp_path.unlink(missing_ok=True)
 
-        return prediction_df.to_dict(
-            orient="records"
+        return prediction_df.to_dict(orient="records")
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
         )
+
+
+@app.post(
+    "/predict-json",
+    tags=["Prediction"],
+    summary="Real-Time Customer Prediction (JSON)",
+)
+def predict_json(transactions: List[Transaction]):
+
+    try:
+
+        transaction_df = pd.DataFrame([t.model_dump() for t in transactions])
+
+        prediction_df = predict_customers(transaction_df)
+
+        return prediction_df.to_dict(orient="records")
 
     except Exception as e:
 

@@ -132,6 +132,4 @@ def generate_business_recommendation(row: Dict[str, Any]) -> str:
 
         logger.error("Groq API Error: %s", e)
 
-        raise RuntimeError(
-            f"Unable to generate AI recommendation.\n{e}"
-        )
+        raise RuntimeError(f"Unable to generate AI recommendation.\n{e}")

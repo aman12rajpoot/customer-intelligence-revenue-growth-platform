@@ -1,20 +1,24 @@
-
-
-from utils.predictor import predict_customer
 import os
 from pathlib import Path
-from turtle import left
+
 import pandas as pd
 import plotly.express as px
-from PIL import Image
 import streamlit as st
 from dotenv import load_dotenv
+from PIL import Image
 
-from utils.groq_utils import generate_business_recommendation
+from utils.api_client import (get_customer, get_customers, get_dashboard,
+                              get_executive_summary,
+                              get_prediction_recommendation,
+                              get_recommendation, predict_customer)
 
 load_dotenv()
 
-st.set_page_config(page_title="Customer Intelligence Dashboard", page_icon="📊", layout="wide")
+st.set_page_config(
+    page_title="Customer Intelligence Dashboard",
+    page_icon="📊",
+    layout="wide",
+)
 
 st.markdown(
     """
@@ -56,14 +60,11 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+
 ROOT = Path(__file__).resolve().parent
 
-
-DATA_DIR = ROOT / "data" / "processed"
-
-
-ROOT_1 = Path(__file__).resolve().parent
-ASSETS_DIR = ROOT_1 / "assets"
+ASSETS_DIR = ROOT / "assets"
 
 hero_path = ASSETS_DIR / "hero.png"
 
@@ -75,7 +76,7 @@ PAGES = [
     "📊 Executive Dashboard",
     "👤 Customer Explorer",
     "🤖 AI Recommendation",
-    "⚡ Real-Time Prediction",   # NEW
+    "⚡ Real-Time Prediction",  # NEW
     "📄 Executive Summary",
     "ℹ️ About",
 ]
@@ -99,51 +100,27 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 
-if not DATA_DIR.exists():
-    st.error(f"Processed data directory not found: {DATA_DIR}")
+
+@st.cache_data(ttl=300)
+def load_backend_data():
+    customer_df = pd.DataFrame(get_customers())
+    executive_summary = get_executive_summary()["summary"]
+    return customer_df, executive_summary
+
+
+try:
+    customer_df, executive_summary = load_backend_data()
+
+except Exception as e:
+    st.error(f"Backend connection failed.\n\n{e}")
     st.stop()
-
-customer_data_candidates = [DATA_DIR / "revenue_at_risk.csv", DATA_DIR / "revenue_at_risk_analysis.csv"]
-data_path = next((path for path in customer_data_candidates if path.exists()), None)
-
-if data_path is None:
-    st.error("No revenue-at-risk dataset was found in the processed data folder.")
-    st.stop()
-
-@st.cache_data(show_spinner=False)
-def load_customer_data(path: Path) -> pd.DataFrame:
-    df = pd.read_csv(path)
-    df = df.copy()
-    df["CustomerID"] = df["CustomerID"].astype(int)
-    df["Churn_Probability"] = pd.to_numeric(df["Churn_Probability"], errors="coerce").fillna(0)
-    df["Predicted_CLV"] = pd.to_numeric(df["Predicted_CLV"], errors="coerce").fillna(0)
-    df["Revenue_at_Risk"] = pd.to_numeric(df["Revenue_at_Risk"], errors="coerce").fillna(0)
-    df["Risk_Category"] = df["Risk_Category"].fillna("Unknown")
-    df["Customer_Action"] = df["Customer_Action"].fillna("Monitor")
-    if "Segment" not in df.columns:
-        df["Segment"] = "Unknown"
-    if "Customer_Persona" not in df.columns:
-        df["Customer_Persona"] = "Unknown"
-    return df
-
-
-@st.cache_data(show_spinner=False)
-def load_summary(path: Path) -> str:
-    if path.exists():
-        return path.read_text(encoding="utf-8")
-    return "Executive summary not generated yet."
-
-
-REPORTS_DIR = ROOT / "reports"
-
-customer_df = load_customer_data(data_path)
-summary_path = REPORTS_DIR / "executive_summary.md"
-executive_summary = load_summary(summary_path)
 
 
 def render_footer():
     st.markdown("---")
-    st.caption("Developed by Aman Rajpoot | Customer Intelligence & Revenue Growth Platform")
+    st.caption(
+        "Developed by Aman Rajpoot | Customer Intelligence & Revenue Growth Platform"
+    )
 
 
 def render_kpi_card(title: str, value: str, subtitle: str):
@@ -151,8 +128,17 @@ def render_kpi_card(title: str, value: str, subtitle: str):
         f"""
         <div class="panel">
             <div class="small-muted">{title}</div>
-            <div style="font-size: 1.45rem; font-weight: 700; color: #f8fafc; margin-top: 0.2rem;">{value}</div>
-            <div class="small-muted" style="margin-top: 0.2rem;">{subtitle}</div>
+            <div style="
+                font-size:1.45rem;
+                font-weight:700;
+                color:#f8fafc;
+                margin-top:0.2rem;
+            ">
+                {value}
+            </div>
+            <div class="small-muted" style="margin-top:0.2rem;">
+                {subtitle}
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -163,17 +149,14 @@ if "recommendation" not in st.session_state:
     st.session_state["recommendation"] = None
 
 
-
-
 if "transactions" not in st.session_state:
     st.session_state["transactions"] = []
 
 
 if page == "🏠 Home":
-   
 
     st.markdown(
-    """
+        """
     <div style="text-align:center; margin-bottom:25px;">
 
     <h1 style="
@@ -198,10 +181,10 @@ if page == "🏠 Home":
 
     </div>
     """,
-    unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
-    left, center,right=st.columns([0.9, 6, 0.09])
+    left, center, right = st.columns([0.9, 6, 0.09])
 
     with center:
 
@@ -210,16 +193,14 @@ if page == "🏠 Home":
             width=750,
         )
 
-
-
     st.markdown("<br>", unsafe_allow_html=True)
 
-
-    col1,col2,col3,col4=st.columns(4)
+    col1, col2, col3, col4 = st.columns(4)
 
     with col1:
 
-        st.markdown("""
+        st.markdown(
+            """
         <div class="feature-card">
 
         <h2>📉</h2>
@@ -230,11 +211,14 @@ if page == "🏠 Home":
         Machine Learning models.
 
         </div>
-        """,unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col2:
 
-        st.markdown("""
+        st.markdown(
+            """
         <div class="feature-card">
 
         <h2>👥</h2>
@@ -245,11 +229,14 @@ if page == "🏠 Home":
         and Customer Persona Analysis.
 
         </div>
-        """,unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col3:
 
-        st.markdown("""
+        st.markdown(
+            """
         <div class="feature-card">
 
         <h2>💰</h2>
@@ -260,11 +247,14 @@ if page == "🏠 Home":
         to improve business growth.
 
         </div>
-        """,unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col4:
 
-        st.markdown("""
+        st.markdown(
+            """
         <div class="feature-card">
 
         <h2>🤖</h2>
@@ -275,17 +265,9 @@ if page == "🏠 Home":
         business recommendations.
 
         </div>
-        """,unsafe_allow_html=True)
-
-
-        
-    
-
-  
-
-    
-
-    
+        """,
+            unsafe_allow_html=True,
+        )
 
     # st.markdown(
     #         "<div class='panel' style='margin-top:1.5rem;'>"
@@ -296,12 +278,9 @@ if page == "🏠 Home":
     #         "<div class='feature-card'><h6>Act</h6><p>Generate retention strategies for customers with the highest revenue-at-risk.</p></div>"
     #         "</div>",
     #         unsafe_allow_html=True,
-    #     )  
-        
+    #     )
 
-    
-                
-    #st.markdown("<div class='panel' style='margin-top:1.5rem;'><h3 style='margin-top:0;'>Data. Insights. Growth.</h3><p class='small-muted'>From data to decisions — build stronger relationships, improve retention, and unlock long-term revenue.</p></div>", unsafe_allow_html=True)
+    # st.markdown("<div class='panel' style='margin-top:1.5rem;'><h3 style='margin-top:0;'>Data. Insights. Growth.</h3><p class='small-muted'>From data to decisions — build stronger relationships, improve retention, and unlock long-term revenue.</p></div>", unsafe_allow_html=True)
     # with right:
     #     st.markdown(
     #         "<div class='panel' style='height:100%; display:flex; align-items:center; justify-content:center;'>"
@@ -326,11 +305,10 @@ if page == "🏠 Home":
 
     # st.divider()
 
-    st.markdown("<br><br>",unsafe_allow_html=True)
-
+    st.markdown("<br><br>", unsafe_allow_html=True)
 
     st.markdown(
-"""
+        """
 <div class="panel" style="text-align:center;">
 
 <h2 style="
@@ -403,8 +381,8 @@ box-shadow:0 4px 12px rgba(0,0,0,0.3);
 
 </div>
 """,
-unsafe_allow_html=True,
-)
+        unsafe_allow_html=True,
+    )
 
 
 #     st.markdown(
@@ -438,581 +416,739 @@ unsafe_allow_html=True,
 # )
 
 
-    
-    # st.markdown("<div class='panel' style='margin-top:1.5rem;'>"
-    #         "<div style='display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;'>"
-    #         "<div class='capability-card'><h6>Data Integration</h6><p>Seamlessly integrate and prepare customer data from multiple sources.</p></div>"
-    #         "<div class='capability-card'><h6>Machine Learning</h6><p>Advanced ML models to predict churn, CLV, and customer behavior.</p></div>"
-    #         "<div class='capability-card'><h6>Customer Insights</h6><p>RFM segmentation and persona analysis for deeper understanding.</p></div>"
-    #         "<div class='capability-card'><h6>Revenue Analytics</h6><p>Identify revenue-at-risk and growth opportunities with data.</p></div>"
-    #         "<div class='capability-card'><h6>AI Recommendations</h6><p>Get actionable, AI-powered recommendations to improve retention.</p></div>"
-    #         "</div></div>", unsafe_allow_html=True)
+# st.markdown("<div class='panel' style='margin-top:1.5rem;'>"
+#         "<div style='display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;'>"
+#         "<div class='capability-card'><h6>Data Integration</h6><p>Seamlessly integrate and prepare customer data from multiple sources.</p></div>"
+#         "<div class='capability-card'><h6>Machine Learning</h6><p>Advanced ML models to predict churn, CLV, and customer behavior.</p></div>"
+#         "<div class='capability-card'><h6>Customer Insights</h6><p>RFM segmentation and persona analysis for deeper understanding.</p></div>"
+#         "<div class='capability-card'><h6>Revenue Analytics</h6><p>Identify revenue-at-risk and growth opportunities with data.</p></div>"
+#         "<div class='capability-card'><h6>AI Recommendations</h6><p>Get actionable, AI-powered recommendations to improve retention.</p></div>"
+#         "</div></div>", unsafe_allow_html=True)
+
+
+elif page == "👤 Customer Explorer":
+
+    st.title("👤 Customer Explorer")
+
+    customer_ids = sorted(customer_df["CustomerID"].astype(int).tolist())
+
+    selected_customer = st.selectbox(
+        "Select Customer",
+        customer_ids,
+    )
+
+    try:
+        customer = get_customer(selected_customer)
+
+    except Exception as e:
+        st.error(f"Unable to load customer.\n\n{e}")
+        st.stop()
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        render_kpi_card(
+            "Customer ID",
+            str(customer["CustomerID"]),
+            "Selected Customer",
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        render_kpi_card(
+            "Segment",
+            customer["Segment"],
+            "Customer Segment",
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        render_kpi_card(
+            "Persona",
+            customer["Customer_Persona"],
+            "Customer Persona",
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        render_kpi_card(
+            "Risk Category",
+            customer["Risk_Category"],
+            "Risk Level",
+        )
+
+    with col2:
+
+        render_kpi_card(
+            "Predicted CLV",
+            f"${customer['Predicted_CLV']:,.2f}",
+            "Customer Lifetime Value",
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        render_kpi_card(
+            "Revenue At Risk",
+            f"${customer['Revenue_at_Risk']:,.2f}",
+            "Potential Revenue Loss",
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        render_kpi_card(
+            "Churn Probability",
+            f"{customer['Churn_Probability']:.2%}",
+            "Likelihood of Churn",
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        render_kpi_card(
+            "Recommended Action",
+            customer["Customer_Action"],
+            "Business Action",
+        )
+
+    render_footer()
+
 
 elif page == "📊 Executive Dashboard":
-    st.title("Executive Dashboard")
 
-    total_customers = len(customer_df)
-    high_risk_customers = int((customer_df["Risk_Category"].str.contains("High|Critical", case=False, na=False)).sum())
-    critical_risk_customers = int((customer_df["Risk_Category"].str.contains("Critical", case=False, na=False)).sum())
-    avg_clv = customer_df["Predicted_CLV"].mean()
-    total_revenue_at_risk = customer_df["Revenue_at_Risk"].sum()
-    avg_churn_rate = customer_df["Churn_Probability"].mean()
-    top_segment = customer_df["Segment"].value_counts().idxmax()
-    top_persona = customer_df["Customer_Persona"].value_counts().idxmax()
-    highest_revenue_customer = customer_df.loc[customer_df["Revenue_at_Risk"].idxmax(), "CustomerID"]
+    st.title("📊 Executive Dashboard")
+
+    try:
+
+        dashboard = get_dashboard()
+
+        total_customers = dashboard["total_customers"]
+        high_risk_customers = dashboard["high_risk"]
+        critical_risk_customers = dashboard["critical"]
+        avg_clv = dashboard["average_clv"]
+        total_revenue_at_risk = dashboard["total_revenue_at_risk"]
+        avg_churn_rate = dashboard["average_churn"]
+
+    except Exception as e:
+
+        st.error(f"Unable to load dashboard.\n\n{e}")
+        st.stop()
+
+    top_segment = customer_df["Segment"].mode()[0]
+    top_persona = customer_df["Customer_Persona"].mode()[0]
 
     col1, col2, col3, col4 = st.columns(4)
+
     with col1:
-        render_kpi_card("👥 Total Customers", f"{total_customers:,}", "Active customer base")
+        render_kpi_card(
+            "👥 Total Customers",
+            f"{total_customers:,}",
+            "Active customer base",
+        )
+
     with col2:
-        render_kpi_card("💰 Revenue at Risk", f"${total_revenue_at_risk:,.2f}", "Exposure across portfolio")
+        render_kpi_card(
+            "💰 Revenue at Risk",
+            f"${total_revenue_at_risk:,.2f}",
+            "Portfolio exposure",
+        )
+
     with col3:
-        render_kpi_card("📈 Avg CLV", f"${avg_clv:,.2f}", "Expected customer value")
+
+        render_kpi_card(
+            "📈 Average CLV",
+            f"${avg_clv:,.2f}",
+            "Expected customer value",
+        )
+
     with col4:
-        render_kpi_card("⚠️ High Risk", f"{high_risk_customers}", "Customers needing action")
+        render_kpi_card(
+            "⚠️ High Risk",
+            str(high_risk_customers),
+            "Customers needing action",
+        )
 
     st.markdown("---")
-    col5, col6, col7 = st.columns(3)
-    with col5:
-        render_kpi_card("📉 Avg Churn %", f"{avg_churn_rate:.2%}", "Overall churn outlook")
-    with col6:
-        render_kpi_card("🏷️ Top Segment", str(top_segment), "Largest segment")
-    with col7:
-        render_kpi_card("🧑 Top Persona", str(top_persona), "Most common persona")
 
-    st.subheader("Top Customers by Revenue at Risk")
+    col5, col6, col7 = st.columns(3)
+
+    with col5:
+        render_kpi_card(
+            "📉 Avg Churn",
+            f"{avg_churn_rate:.2%}",
+            "Overall churn probability",
+        )
+
+    with col6:
+        render_kpi_card(
+            "🏷️ Top Segment",
+            top_segment,
+            "Largest segment",
+        )
+
+    with col7:
+        render_kpi_card(
+            "👤 Top Persona",
+            top_persona,
+            "Most common persona",
+        )
+
+    st.markdown("---")
+
+    st.subheader("Top Revenue-at-Risk Customers")
+
     st.dataframe(
-        customer_df[["CustomerID", "Segment", "Customer_Persona", "Churn_Probability", "Predicted_CLV", "Revenue_at_Risk", "Risk_Category", "Customer_Action"]]
-        .sort_values("Revenue_at_Risk", ascending=False)
-        .head(20),
+        customer_df.sort_values(
+            "Revenue_at_Risk",
+            ascending=False,
+        ),
         use_container_width=True,
     )
 
     st.markdown("---")
+
     st.subheader("Customer Risk Distribution")
+
     risk_counts = customer_df["Risk_Category"].value_counts().reset_index()
-    risk_counts.columns = ["Risk_Category", "Customers"]
-    risk_fig = px.pie(
+
+    risk_counts.columns = [
+        "Risk Category",
+        "Customers",
+    ]
+
+    fig = px.pie(
         risk_counts,
         values="Customers",
-        names="Risk_Category",
-        title="Risk Category Breakdown",
-        color_discrete_sequence=px.colors.qualitative.Set2,
+        names="Risk Category",
+        hole=0.45,
+        title="Customer Risk Distribution",
     )
-    st.plotly_chart(risk_fig, use_container_width=True)
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+    )
 
     st.subheader("CLV vs Churn Probability")
-    scatter_fig = px.scatter(
+
+    fig = px.scatter(
         customer_df,
         x="Predicted_CLV",
         y="Churn_Probability",
         size="Revenue_at_Risk",
         color="Risk_Category",
         hover_data=["CustomerID"],
-        title="CLV vs Churn Probability by Revenue at Risk",
     )
-    st.plotly_chart(scatter_fig, use_container_width=True)
 
-    st.subheader("Top 10 Customers by Revenue at Risk")
-    top_customers = customer_df[["CustomerID", "Revenue_at_Risk", "Risk_Category"]].sort_values("Revenue_at_Risk", ascending=False).head(10)
-    top_fig = px.bar(
-        top_customers,
-        x="Revenue_at_Risk",
-        y="CustomerID",
-        color="Risk_Category",
-        orientation="h",
-        labels={"CustomerID": "Customer ID", "Revenue_at_Risk": "Revenue at Risk"},
-        title="Top 10 Customers by Revenue at Risk",
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
     )
-    st.plotly_chart(top_fig, use_container_width=True)
+
     render_footer()
 
-elif page == "👤 Customer Explorer":
-    st.title("Customer Explorer")
-
-    search_term = st.text_input("Search Customer ID")
-    if search_term:
-        filtered_df = customer_df[customer_df["CustomerID"].astype(str).str.contains(search_term, case=False, na=False)]
-    else:
-        filtered_df = customer_df
-
-    customer_ids = sorted(filtered_df["CustomerID"].astype(int).tolist())
-    if not customer_ids:
-        st.warning("No matching customers found.")
-        render_footer()
-        st.stop()
-    selected_customer = st.selectbox("Select a customer", customer_ids)
-    customer_row = customer_df[customer_df["CustomerID"] == selected_customer].iloc[0]
-
-    st.markdown(f"<div class='hero-box'><h3 style='margin:0;'>Customer {selected_customer}</h3><p style='margin:0.2rem 0 0 0; color:#f8fafc;'>Segment: {customer_row.get('Segment', 'Unknown')} | Persona: {customer_row.get('Customer_Persona', 'Unknown')}</p></div>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        render_kpi_card("📉 Churn Probability", f"{customer_row.get('Churn_Probability', 0):.2%}", "Customer churn outlook")
-    with col2:
-        render_kpi_card("💎 Predicted CLV", f"${customer_row.get('Predicted_CLV', 0):,.2f}", "Future customer value")
-    with col3:
-        render_kpi_card("⚠️ Revenue at Risk", f"${customer_row.get('Revenue_at_Risk', 0):,.2f}", "Monetary exposure")
-
-    st.subheader("Customer Profile")
-    profile_df = pd.DataFrame(
-        [
-            {
-                "Customer ID": int(customer_row["CustomerID"]),
-                "Segment": customer_row.get("Segment", "Unknown"),
-                "Persona": customer_row.get("Customer_Persona", "Unknown"),
-                "Churn Probability": customer_row.get("Churn_Probability", 0),
-                "Predicted CLV": customer_row.get("Predicted_CLV", 0),
-                "Revenue at Risk": customer_row.get("Revenue_at_Risk", 0),
-                "Risk Category": customer_row.get("Risk_Category", "Unknown"),
-                "Customer Action": customer_row.get("Customer_Action", "Monitor"),
-            }
-        ]
-    )
-    st.dataframe(profile_df, use_container_width=True)
-    # ----------------------------------------------------------
-# Download Selected Customer Report
-# ----------------------------------------------------------
-
-    customer_report = profile_df.to_csv(
-        index=False
-    )
-
-    st.download_button(
-        label="📥 Download Customer Report",
-        data=customer_report,
-        file_name=f"customer_{selected_customer}_report.csv",
-        mime="text/csv",
-    )
-    
-    render_footer()
 
 elif page == "🤖 AI Recommendation":
 
-    st.title("🤖 AI Recommendation")
+    st.title("🤖 AI Business Recommendation")
 
-    search_term = st.text_input("Search Customer ID")
-
-    if search_term:
-        filtered_df = customer_df[
-            customer_df["CustomerID"].astype(str).str.contains(
-                search_term,
-                case=False,
-                na=False,
-            )
-        ]
-    else:
-        filtered_df = customer_df
-
-    customer_ids = sorted(filtered_df["CustomerID"].astype(int).tolist())
-
-    if not customer_ids:
-        st.warning("No customer found.")
-        st.stop()
+    customer_ids = sorted(customer_df["CustomerID"].astype(int).tolist())
 
     selected_customer = st.selectbox(
-        "Choose Customer",
+        "Select Customer",
         customer_ids,
+        key="recommendation_customer",
     )
 
-    customer_row = customer_df[
-        customer_df["CustomerID"] == selected_customer
-    ].iloc[0]
+    if st.button(
+        "Generate Recommendation",
+        use_container_width=True,
+    ):
 
-    
+        with st.spinner("Generating recommendation..."):
 
-    if st.button("Generate AI Recommendation"):
+            try:
 
-        try:
+                recommendation = get_recommendation(selected_customer)
 
-            with st.spinner("Generating..."):
+                st.session_state["recommendation"] = recommendation
 
-                recommendation = generate_business_recommendation(
-                    customer_row.to_dict()
-                )
+            except Exception as e:
 
-            
-
-            
-
-            
-
-            st.session_state["recommendation"] = recommendation
-
-        except Exception as e:
-
-            st.exception(e)
-
-    
+                st.error(f"Error: {e}")
 
     if st.session_state.get("recommendation"):
 
-        st.success("Recommendation")
+        st.success("Recommendation Generated Successfully")
 
-        st.write(st.session_state["recommendation"])
+        st.markdown(st.session_state["recommendation"])
 
-    else:
-
-        st.warning("No recommendation available.")
-
-
-
+    render_footer()
 
 
 elif page == "⚡ Real-Time Prediction":
 
     st.title("⚡ Real-Time Customer Prediction")
 
-    st.markdown(
-        "Enter customer transaction details below."
+    if "transactions" not in st.session_state:
+        st.session_state.transactions = []
+
+    st.subheader("Choose Input Method")
+
+    input_method = st.radio(
+        "Input Method",
+        ["Manual Entry", "Paste Rows"],
+        horizontal=True,
     )
 
-    st.divider()
+    # ==========================================
+    # MANUAL ENTRY
+    # ==========================================
 
-    st.subheader("Customer Transaction")
+    if input_method == "Manual Entry":
 
-    # customer_id = st.number_input(
-    #     "Customer ID",
-    #     min_value=1,
-    #     step=1,
-    # )
+        col1, col2 = st.columns(2)
 
-    st.subheader("Customer Information")
+        with col1:
 
-    # Customer ID is entered only once
+            invoice_no = st.text_input("Invoice Number")
+
+            stock_code = st.text_input("Stock Code")
+
+            description = st.text_input("Description")
+
+            quantity = st.number_input(
+                "Quantity",
+                min_value=1,
+                value=1,
+            )
+
+        with col2:
+
+            invoice_date = st.date_input("Invoice Date")
+
+            unit_price = st.number_input(
+                "Unit Price",
+                min_value=0.0,
+                value=1.0,
+            )
+
+            customer_id = st.number_input(
+                "Customer ID",
+                min_value=1,
+                step=1,
+            )
+
+            country = st.text_input(
+                "Country",
+                value="United Kingdom",
+            )
+
+        if st.button(
+            "➕ Add Transaction",
+            use_container_width=True,
+        ):
+
+            transaction = {
+                "InvoiceNo": invoice_no,
+                "StockCode": stock_code,
+                "Description": description,
+                "Quantity": quantity,
+                "InvoiceDate": str(invoice_date),
+                "UnitPrice": unit_price,
+                "CustomerID": int(customer_id),
+                "Country": country,
+            }
+
+            if len(st.session_state.transactions) > 0:
+
+                existing_customer = st.session_state.transactions[0]["CustomerID"]
+
+                if int(customer_id) != existing_customer:
+
+                    st.error(
+                        f"All transactions must belong to Customer {existing_customer}"
+                    )
+
+                else:
+
+                    st.session_state.transactions.append(transaction)
+
+                    st.session_state.pop("prediction", None)
+
+                    st.session_state.pop("ai_recommendation", None)
+
+                    st.success("Transaction added.")
+
+            else:
+
+                st.session_state.transactions.append(transaction)
+
+                st.session_state.pop("prediction", None)
+
+                st.session_state.pop("ai_recommendation", None)
+
+                st.success("Transaction added.")
+
+        # ==========================================
+    # PASTE ROWS
+    # ==========================================
+
+    elif input_method == "Paste Rows":
+
+        import io
+
+        st.subheader("Paste Customer Transactions")
+
+        st.info(
+            """
+Copy rows directly from Excel.
+
+Required columns:
+
+InvoiceNo | StockCode | Description | Quantity |
+InvoiceDate | UnitPrice | CustomerID | Country
+"""
+        )
+
+        pasted_text = st.text_area(
+            "Paste copied rows here",
+            height=220,
+        )
+
+        if st.button(
+            "📋 Parse Rows",
+            use_container_width=True,
+        ):
+
+            try:
+
+                df = pd.read_csv(
+                    io.StringIO(pasted_text),
+                    sep=r"\s{2,}",
+                    engine="python",
+                    header=None,
+                )
+
+                df.columns = [
+                    "InvoiceNo",
+                    "StockCode",
+                    "Description",
+                    "Quantity",
+                    "InvoiceDate",
+                    "UnitPrice",
+                    "CustomerID",
+                    "Country",
+                ]
+
+                # Only one customer allowed
+                unique_customers = df["CustomerID"].unique()
+
+                if len(unique_customers) != 1:
+
+                    st.error("Please paste transactions of only ONE customer.")
+
+                else:
+
+                    pasted_customer = int(unique_customers[0])
+
+                    # Match existing customer
+                    if len(st.session_state.transactions) > 0:
+
+                        existing_customer = st.session_state.transactions[0][
+                            "CustomerID"
+                        ]
+
+                        if pasted_customer != existing_customer:
+
+                            st.error(
+                                f"""
+Current customer is {existing_customer}
+
+Pasted data belongs to {pasted_customer}
+"""
+                            )
+
+                        else:
+
+                            st.session_state.transactions.extend(
+                                df.to_dict(orient="records")
+                            )
+
+                            st.session_state.pop("prediction", None)
+
+                            st.session_state.pop("ai_recommendation", None)
+
+                            st.success(f"{len(df)} transactions added.")
+
+                    else:
+
+                        st.session_state.transactions.extend(
+                            df.to_dict(orient="records")
+                        )
+
+                        st.session_state.pop("prediction", None)
+
+                        st.session_state.pop("ai_recommendation", None)
+
+                        st.success(f"{len(df)} transactions added.")
+
+            except Exception as e:
+
+                st.error(str(e))
+
+        # ==========================================================
+    # CURRENT CUSTOMER TRANSACTIONS
+    # ==========================================================
+
+    st.markdown("---")
+
+    st.subheader("📝 Current Customer Transactions")
+
     if len(st.session_state.transactions) == 0:
 
-        customer_id = st.number_input(
-            "Customer ID",
-            min_value=1,
-            step=1,
-            key="customer_id",
-        )
+        st.info("No transactions added yet.")
 
     else:
 
-        customer_id = st.session_state.transactions[0]["CustomerID"]
+        transaction_df = pd.DataFrame(st.session_state.transactions)
 
-        st.text_input(
-            "Customer ID",
-            value=str(customer_id),
-            disabled=True,
-        )
+        customer_id = transaction_df.iloc[0]["CustomerID"]
 
-    invoice_date = st.date_input(
-        "Invoice Date",
-    )
+        col1, col2 = st.columns(2)
 
-    quantity = st.number_input(
-        "Quantity",
-        min_value=1,
-        value=1,
-    )
+        with col1:
 
-    unit_price = st.number_input(
-        "Unit Price",
-        min_value=0.01,
-        value=1.00,
-    )
+            st.metric(
+                "Customer ID",
+                customer_id,
+            )
 
-    country = st.text_input(
-        "Country",
-        value="United Kingdom",
-    )
+        with col2:
 
-    description = st.text_input(
-        "Description",
-    )
-
-    stock_code = st.text_input(
-        "Stock Code",
-    )
-
-    if st.button(
-        "➕ Add Transaction",
-        use_container_width=True,
-    ):
-
-        invoice_no = (
-            f"INV{len(st.session_state.transactions)+1}"
-        )
-
-        transaction = {
-
-            "InvoiceNo": invoice_no,
-
-            "StockCode": stock_code,
-
-            "Description": description,
-
-            "Quantity": quantity,
-
-            "InvoiceDate": str(invoice_date),
-
-            "UnitPrice": unit_price,
-
-            "CustomerID": customer_id,
-
-            "Country": country,
-
-        }
-
-        st.session_state.transactions.append(
-            transaction
-        )
-
-        st.success(
-            "Transaction added successfully."
-        )
-
-    st.divider()
-
-    st.subheader("Current Transactions")
-
-    if st.session_state.transactions:
-
-        transaction_df = pd.DataFrame(
-            st.session_state.transactions
-        )
-
-        transaction_df["Revenue"] = (
-            transaction_df["Quantity"]
-            * transaction_df["UnitPrice"]
-        )
+            st.metric(
+                "Transactions Added",
+                len(transaction_df),
+            )
 
         st.dataframe(
             transaction_df,
             use_container_width=True,
+            hide_index=True,
         )
 
-    else:
+        st.markdown("### Manage Transactions")
 
-        st.info(
-            "No transactions added yet."
-        )
+        col1, col2 = st.columns(2)
 
-    st.divider()
+        with col1:
 
-    # st.button(
-    #     "🚀 Predict Customer",
-    #     use_container_width=True,
-    # )
+            if st.button(
+                "🗑 Remove Last Transaction",
+                use_container_width=True,
+            ):
 
+                st.session_state.transactions.pop()
 
- # ----------------------------------------------------------
-# Predict Customer
-# ----------------------------------------------------------
-# ----------------------------------------------------------
-# Action Buttons
-# ----------------------------------------------------------
+                st.session_state.pop("prediction", None)
 
-    col1, col2 = st.columns(2)
+                st.session_state.pop("ai_recommendation", None)
 
-    with col1:
+                st.rerun()
 
-        predict = st.button(
-            "🚀 Predict Customer",
-            use_container_width=True,
-            type="primary",
-        )
+        with col2:
 
-    with col2:
+            if st.button(
+                "🧹 Clear All Transactions",
+                use_container_width=True,
+            ):
 
-        clear_customer = st.button(
-            "🗑️ Clear & New Customer",
-            use_container_width=True,
-        )
+                st.session_state.transactions = []
 
-    # ----------------------------------------------------------
-    # Clear Current Customer
-    # ----------------------------------------------------------
+                st.session_state.pop("prediction", None)
 
-    if clear_customer:
+                st.session_state.pop("ai_recommendation", None)
 
-        st.session_state["transactions"] = []
+                st.rerun()
 
-
-        st.session_state.pop("prediction_result", None)
-
-        st.session_state.pop("recommendation", None)
-
-
-        st.rerun()
-
-    # ----------------------------------------------------------
-    # Predict Customer
-    # ----------------------------------------------------------
-
-    if predict:
-
-        if len(st.session_state.transactions) == 0:
+        if len(transaction_df) < 3:
 
             st.warning(
-                "Please add at least one transaction."
+                f"""
+        Minimum **3 transactions** are required.
+
+        Current Transactions: **{len(transaction_df)}**
+        """
             )
 
         else:
 
-            transaction_df = pd.DataFrame(
-                st.session_state.transactions
-            )
+            st.success("✅ Ready for Prediction")
 
-            if len(transaction_df) < 3:
+            if st.button(
+                "🚀 Generate Prediction",
+                use_container_width=True,
+            ):
+                with st.spinner("Generating prediction..."):
 
-                st.warning(
-                    """
-    ⚠️ This prediction is based on fewer than **3 transactions**.
+                    try:
 
-    The model was trained using customers with purchase history,
-    so predictions for customers with very limited transactions
-    may be less reliable.
-    """
+                        customer_ids = {
+                            t["CustomerID"] for t in st.session_state.transactions
+                        }
+
+                        if len(customer_ids) != 1:
+
+                            st.error(
+                                "All transactions must belong to the same customer."
+                            )
+
+                        else:
+
+                            prediction = predict_customer(st.session_state.transactions)
+
+                            st.session_state["prediction"] = prediction
+
+                            st.success("Prediction generated successfully.")
+
+                    except Exception as e:
+
+                        st.error(str(e))
+
+        if "prediction" in st.session_state:
+
+            prediction = st.session_state["prediction"]
+
+            st.markdown("---")
+
+            st.subheader("📊 Prediction Summary")
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+
+                render_kpi_card(
+                    "👤 Customer ID",
+                    prediction["CustomerID"],
+                    "Predicted Customer",
                 )
 
-            try:
+            st.markdown("<br>", unsafe_allow_html=True)
 
-                with st.spinner(
-                    "Predicting customer..."
-                ):
+            with col2:
 
-                    result = predict_customer(
-                        transaction_df
-                    )
-
-                st.session_state["prediction_result"] = result
-
-
-                st.session_state.pop(
-        "recommendation",
-        None,
-    )
-
-                st.success(
-                    "Prediction completed successfully."
+                render_kpi_card(
+                    "📉 Churn Probability",
+                    f"{prediction['Churn_Probability']:.2%}",
+                    "Risk of Churn",
                 )
 
-            except Exception as e:
+            st.markdown("<br>", unsafe_allow_html=True)
 
-                st.exception(e)
+            with col3:
 
+                render_kpi_card(
+                    "💰 Predicted CLV",
+                    f"₹ {prediction['Predicted_CLV']:,.2f}",
+                    "Customer Lifetime Value",
+                )
 
-    # ----------------------------------------------------------
-    # Show Prediction Result
-    # ----------------------------------------------------------
-    if (
-        "prediction_result" in st.session_state
-        and st.session_state["prediction_result"] is not None):
+            col4, col5, col6 = st.columns(3)
 
+            with col4:
 
+                render_kpi_card(
+                    "⚠ Revenue at Risk",
+                    f"₹ {prediction['Revenue_at_Risk']:,.2f}",
+                    "Potential Revenue Loss",
+                )
 
-        result = st.session_state["prediction_result"]
+            st.markdown("<br>", unsafe_allow_html=True)
 
-        st.divider()
+            with col5:
 
-        st.subheader("📊 Prediction Results")
+                render_kpi_card(
+                    "🚨 Risk Category",
+                    prediction["Risk_Category"],
+                    "Customer Risk",
+                )
 
-        c1, c2, c3 = st.columns(3)
+            st.markdown("<br>", unsafe_allow_html=True)
 
-        c1.metric(
-            "Customer Persona",
-            result["Customer_Persona"],
-        )
+            with col6:
 
-        c2.metric(
-            "Churn Probability",
-            f"{result['Churn_Probability']:.2%}",
-        )
+                render_kpi_card(
+                    "🎯 Customer Action",
+                    prediction["Customer_Action"],
+                    "Recommended Action",
+                )
 
-        c3.metric(
-            "Predicted CLV",
-            f"${result['Predicted_CLV']:,.2f}",
-        )
+            st.markdown("---")
 
-        c4, c5, c6 = st.columns(3)
+            st.subheader("🤖 AI Business Recommendation")
 
-        c4.metric(
-            "Revenue at Risk",
-            f"${result['Revenue_at_Risk']:,.2f}",
-        )
-
-        c5.metric(
-            "Risk Category",
-            result["Risk_Category"],
-        )
-        
-
-        st.divider()
-
-        st.subheader("📌 Recommended Business Action")
-
-
-        st.info(
-        result["Customer_Action"]
-    )
-
-    # ----------------------------------------------------------
-    # AI Recommendation
-    # ----------------------------------------------------------
-
-    st.divider()
-
-    if st.button(
-        "🤖 Generate AI Recommendation",
-        use_container_width=True,
-    ):
-
-        try:
-
-            with st.spinner(
-                "Generating AI recommendation..."
+            if st.button(
+                "Generate AI Recommendation",
+                use_container_width=True,
             ):
 
-                recommendation = generate_business_recommendation(
-                    result
-                )
+                with st.spinner("Generating AI recommendation..."):
 
-                st.session_state["recommendation"] = recommendation
+                    try:
 
-        except Exception as e:
+                        recommendation = get_prediction_recommendation(prediction)
 
-            st.exception(e)
+                        st.session_state["ai_recommendation"] = recommendation
 
-    # ----------------------------------------------------------
-    # Display AI Recommendation
-    # ----------------------------------------------------------
+                    except Exception as e:
 
-    if (
-        "recommendation" in st.session_state
-        and st.session_state["recommendation"] is not None
-    ):
+                        st.error(str(e))
 
-        st.subheader("🤖 AI Business Recommendation")
+            if "ai_recommendation" in st.session_state:
 
-        st.markdown(
-            st.session_state["recommendation"]
-        )
+                st.success("AI Recommendation Generated Successfully")
+
+                st.write(st.session_state["ai_recommendation"])
 
         render_footer()
 
 
 elif page == "📄 Executive Summary":
 
-    st.markdown("<div class='hero-box'><h2 style='margin:0;'>📄 Executive Summary</h2></div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='panel'>{executive_summary}</div>", unsafe_allow_html=True)
+    st.title("📄 Executive Summary")
+
+    st.info(
+        """
+This report summarizes the overall customer intelligence
+analysis, key business insights and recommended actions.
+"""
+    )
+
+    st.markdown(executive_summary)
+
     render_footer()
+
 
 elif page == "ℹ️ About":
 
-    st.markdown("<div class='hero-box'><h2 style='margin:0;'>About Customer Intelligence</h2></div>", unsafe_allow_html=True)
-    st.markdown("<div class='panel'><h3 style='margin-top:0;'>A modern platform for customer retention and revenue growth</h3><p class='small-muted'>This platform combines analytics, machine learning, and generative AI to turn customer signals into high-impact business actions. Explore executive KPIs, customer profiles, AI recommendations, and revenue risk insights in a single workspace.</p></div>", unsafe_allow_html=True)
-    st.markdown("<div class='panel'>"
-                "<h4 style='margin-top:0;'>Platform Capabilities</h4>"
-                "<ul style='padding-left:1.2rem; margin:0; color:#cbd5e1;'>"
-                "<li>Integrated churn, CLV, and revenue-at-risk analytics</li>"
-                "<li>Executive-ready dashboards and KPI summaries</li>"
-                "<li>AI-generated customer retention recommendations</li>"
-                "<li>FastAPI endpoints for programmatic access</li>"
-                "<li>Notebook-driven model development and analysis</li>"
-                "</ul>"
-                "</div>",
-                unsafe_allow_html=True)
+    st.markdown(
+        "<div class='hero-box'><h2 style='margin:0;'>About Customer Intelligence</h2></div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<div class='panel'><h3 style='margin-top:0;'>A modern platform for customer retention and revenue growth</h3><p class='small-muted'>This platform combines analytics, machine learning, and generative AI to turn customer signals into high-impact business actions. Explore executive KPIs, customer profiles, AI recommendations, and revenue risk insights in a single workspace.</p></div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<div class='panel'>"
+        "<h4 style='margin-top:0;'>Platform Capabilities</h4>"
+        "<ul style='padding-left:1.2rem; margin:0; color:#cbd5e1;'>"
+        "<li>Integrated churn, CLV, and revenue-at-risk analytics</li>"
+        "<li>Executive-ready dashboards and KPI summaries</li>"
+        "<li>AI-generated customer retention recommendations</li>"
+        "<li>FastAPI endpoints for programmatic access</li>"
+        "<li>Notebook-driven model development and analysis</li>"
+        "</ul>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
     render_footer()

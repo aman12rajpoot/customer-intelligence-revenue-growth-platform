@@ -47,28 +47,19 @@ def calculate_rfm(
     # Recency
     # --------------------------
 
-    recency = (
-        reference_date -
-        df.groupby("CustomerID")["InvoiceDate"].max()
-    ).dt.days
+    recency = (reference_date - df.groupby("CustomerID")["InvoiceDate"].max()).dt.days
 
     # --------------------------
     # Frequency
     # --------------------------
 
-    frequency = (
-        df.groupby("CustomerID")["InvoiceNo"]
-        .nunique()
-    )
+    frequency = df.groupby("CustomerID")["InvoiceNo"].nunique()
 
     # --------------------------
     # Monetary
     # --------------------------
 
-    monetary = (
-        df.groupby("CustomerID")["Revenue"]
-        .sum()
-    )
+    monetary = df.groupby("CustomerID")["Revenue"].sum()
 
     # --------------------------
     # RFM Table
@@ -87,22 +78,13 @@ def calculate_rfm(
     # --------------------------
 
     rfm["Average_Order_Value"] = (
-        rfm["Monetary"] /
-        rfm["Frequency"].replace(0, 1)
+        rfm["Monetary"] / rfm["Frequency"].replace(0, 1)
     ).round(2)
-
 
     rfm.reset_index(inplace=True)
 
+    rfm.sort_values(by="CustomerID", inplace=True)
 
-    rfm.sort_values(
-    by="CustomerID",
-    inplace=True)
-
-
-    rfm.reset_index(
-        drop=True,
-        inplace=True
-    )
+    rfm.reset_index(drop=True, inplace=True)
 
     return rfm

@@ -42,8 +42,8 @@ def clean_transaction_data(df: pd.DataFrame) -> pd.DataFrame:
     # -------------------------
 
     # -------------------------
-# Correct data types
-# -------------------------
+    # Correct data types
+    # -------------------------
     df["CustomerID"] = df["CustomerID"].astype(int)
 
     # Convert InvoiceDate safely
@@ -68,9 +68,6 @@ def clean_transaction_data(df: pd.DataFrame) -> pd.DataFrame:
     # -------------------------
     # Revenue Feature
     # -------------------------
-    df["Revenue"] = (
-        df["Quantity"]
-        * df["UnitPrice"]
-    )
+    df["Revenue"] = df["Quantity"] * df["UnitPrice"]
 
     return df
