@@ -1,10 +1,14 @@
 
-## 📌 Overview
+
+# 🚀 Customer Intelligence & Revenue Growth Platform
+
+### 🔗 Live Demo
+
+- 🌐 Frontend: https://customer-intelligence-revenue-growth-platform-ea5pjfaayrverxr5.streamlit.app
+- ⚡ FastAPI Docs: https://customer-intelligence-system-api.onrender.com/docs
+- 📂 GitHub Repository: https://github.com/aman12rajpoot/customer-intelligence-revenue-growth-platform
 
 
-- Streamlit Community Cloud
-
-API_URL = "https://customer-intelligence-revenue-growth-platform-ea5pjfaayrverxr5.streamlit.app"
 
 
 The **Customer Intelligence & Revenue Growth Platform** is a full-stack AI-powered customer analytics application that helps businesses understand customer behavior, predict churn, estimate Customer Lifetime Value (CLV), quantify revenue at risk, and generate AI-powered retention strategies.
@@ -611,7 +615,8 @@ Deploy Streamlit using:
 
 - Streamlit Community Cloud
 
-API_URL = "https://customer-intelligence-revenue-growth-platform-ea5pjfaayrverxr5.streamlit.app"
+
+"https://customer-intelligence-revenue-growth-platform-ea5pjfaayrverxr5.streamlit.app"
 
 
 
