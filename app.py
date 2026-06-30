@@ -145,8 +145,15 @@ def render_kpi_card(title: str, value: str, subtitle: str):
     )
 
 
+
+
+
 if "recommendation" not in st.session_state:
     st.session_state["recommendation"] = None
+
+if "ai_recommendation" not in st.session_state:
+    st.session_state["ai_recommendation"] = None
+
 
 
 if "transactions" not in st.session_state:
@@ -677,11 +684,13 @@ elif page == "🤖 AI Recommendation":
                 st.error(f"Error: {e}")
 
     if st.session_state.get("recommendation"):
-        
 
         st.success("Recommendation Generated Successfully")
 
-        st.markdown(st.session_state["ai_recommendation"])
+        st.markdown(
+            st.session_state["recommendation"]
+        )
+
 
     render_footer()
 
@@ -1105,13 +1114,16 @@ Pasted data belongs to {pasted_customer}
                         st.error(str(e))
 
 
-            if st.session_state.get("recommendation"):
+            if st.session_state.get("ai_recommendation"):
+
+                st.success("AI Recommendation Generated Successfully")
+
+                st.markdown(
+                    st.session_state["ai_recommendation"]
+                )
+
+
                 
-
-                st.success("Recommendation Generated Successfully")
-
-
-                st.markdown(st.session_state["ai_recommendation"])
 
               
 
