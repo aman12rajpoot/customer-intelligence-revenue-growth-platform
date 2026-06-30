@@ -116,7 +116,7 @@ def generate_business_recommendation(row: Dict[str, Any]) -> str:
                 },
             ],
             temperature=0.2,
-            max_tokens=300,
+            max_tokens=350,
         )
 
         recommendation = response.choices[0].message.content.strip()
