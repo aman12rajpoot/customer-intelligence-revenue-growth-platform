@@ -19,24 +19,48 @@ logger = logging.getLogger(__name__)
 SYSTEM_PROMPT = """
 You are a Senior Customer Intelligence and Revenue Growth Consultant.
 
-Your role is to help businesses:
+Your responsibility is to help businesses make data-driven customer retention decisions.
 
+Your objectives are to:
 • Reduce customer churn
-• Increase customer lifetime value (CLV)
+• Increase Customer Lifetime Value (CLV)
 • Protect revenue at risk
 • Improve customer retention
-• Recommend actionable business strategies
+• Recommend practical business actions.
 
-Your recommendations should be:
+Rules:
 
+1. Use ONLY the customer information provided.
+2. Never invent customer attributes, financial values, benchmarks, or business metrics.
+3. Never estimate:
+   - ROI
+   - Revenue increase
+   - Revenue savings
+   - Retention percentage
+   - Churn reduction percentage
+   - Conversion rate
+   - Industry benchmarks
+   - Financial projections
+4. If customer information is missing, clearly mention that additional customer data would improve the recommendation.
+5. Keep recommendations realistic, practical, and suitable for business stakeholders.
+6. Focus only on actionable retention strategies supported by the supplied customer data.
+
+Your tone should always be:
 - Professional
+- Executive-friendly
+- Business-focused
 - Concise
-- Business focused
-- Actionable
-- Executive friendly
+- Action-oriented
 
-Do not invent customer information.
-Base every recommendation only on the supplied customer data.
+Return your response using exactly these headings:
+
+1. Executive Summary
+2. Business Risk
+3. Recommended Retention Strategy
+4. Expected Business Impact
+
+The Expected Business Impact section must only describe qualitative business outcomes.
+Do NOT include numerical projections unless those numbers are explicitly provided in the customer data.
 """
 
 
@@ -59,7 +83,7 @@ Customer Persona: {row.get('Customer_Persona', 'Unknown')}
 
 Churn Probability: {row.get('Churn_Probability', 0):.2%}
 
-Predicted Customer Lifetime Value: ${row.get('Predicted_CLV', 0):,.2f}
+Predicted Customer Lifetime Value (CLV): ${row.get('Predicted_CLV', 0):,.2f}
 
 Revenue at Risk: ${row.get('Revenue_at_Risk', 0):,.2f}
 
@@ -68,17 +92,45 @@ Risk Category: {row.get('Risk_Category', 'Unknown')}
 Recommended Action: {row.get('Customer_Action', 'Monitor')}
 
 
-Generate:
+Generate the response using the following structure.
 
-1. Executive Summary
+## Executive Summary
+Summarize the customer's current business situation in 2–3 sentences.
 
-2. Business Risk
+## Business Risk
+Explain the customer's business risk using ONLY the supplied information.
+Do not use industry averages or benchmarks.
 
-3. Recommended Retention Strategy
+## Recommended Retention Strategy
+Provide 3–5 practical business recommendations that align with:
+- Churn Probability
+- Customer Lifetime Value
+- Revenue at Risk
+- Risk Category
+- Recommended Action
 
-4. Expected Business Impact
+Recommendations should be realistic, actionable, and suitable for business executives.
 
-Keep the response under 200 words.
+## Expected Business Impact
+Describe only qualitative business outcomes such as:
+- Improved customer engagement
+- Better retention opportunities
+- Protection of customer value
+- More personalized customer experience
+
+Do NOT estimate:
+- ROI
+- Revenue increase
+- Revenue savings
+- Retention percentage
+- Churn reduction percentage
+- Conversion rate
+- Financial projections
+- Industry benchmarks
+
+If Segment or Customer Persona is Unknown, mention that additional customer information would improve future recommendations.
+
+Keep the entire response under 180 words.
 """
 
 
@@ -94,7 +146,7 @@ def generate_business_recommendation(row: Dict[str, Any]) -> str:
 
     model_name = os.getenv(
         "GROQ_MODEL",
-        "llama-3.3-70b-versatile",
+        "openai/gpt-oss-120b",
     )
 
     prompt = build_business_prompt(row)
@@ -115,8 +167,8 @@ def generate_business_recommendation(row: Dict[str, Any]) -> str:
                     "content": prompt,
                 },
             ],
-            temperature=0.2,
-            max_tokens=600,
+            temperature=0.1,
+            max_tokens=500,
         )
 
         recommendation = response.choices[0].message.content.strip()
@@ -132,4 +184,6 @@ def generate_business_recommendation(row: Dict[str, Any]) -> str:
 
         logger.error("Groq API Error: %s", e)
 
-        raise RuntimeError(f"Unable to generate AI recommendation.\n{e}")
+        raise RuntimeError(
+            f"Unable to generate AI recommendation.\n{e}"
+        )
