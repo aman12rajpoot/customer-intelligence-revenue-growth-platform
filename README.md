@@ -1,5 +1,3 @@
-
-
 # 🚀 Customer Intelligence & Revenue Growth Platform
 
 ### 🔗 Live Demo
@@ -8,12 +6,13 @@
 - ⚡ FastAPI Docs: https://customer-intelligence-system-api.onrender.com/docs
 - 📂 GitHub Repository: https://github.com/aman12rajpoot/customer-intelligence-revenue-growth-platform
 
+---
 
+## 📌 Overview
 
+The **Customer Intelligence & Revenue Growth Platform** is a full-stack AI-powered customer analytics application that helps businesses understand customer behavior, predict customer churn, estimate Customer Lifetime Value (CLV), quantify revenue at risk, and generate AI-powered business recommendations.
 
-The **Customer Intelligence & Revenue Growth Platform** is a full-stack AI-powered customer analytics application that helps businesses understand customer behavior, predict churn, estimate Customer Lifetime Value (CLV), quantify revenue at risk, and generate AI-powered retention strategies.
-
-The project combines **Machine Learning**, **Customer Analytics**, **FastAPI**, **Streamlit**, and **Large Language Models (Groq Llama 3.3)** into one end-to-end business intelligence platform.
+The project combines **Machine Learning**, **Customer Analytics**, **FastAPI**, **Streamlit**, and **GPT-OSS (via Groq API)** into a unified end-to-end customer intelligence platform.
 
 The application supports both:
 
@@ -24,23 +23,23 @@ The application supports both:
 
 # 🎯 Business Problem
 
-Customer retention is one of the biggest challenges faced by businesses.
+Customer retention is one of the biggest challenges faced by modern businesses.
 
 Most organizations know:
 
-- who purchased,
-- how much they spent,
-- when they purchased,
+- Who purchased
+- How much they spent
+- When they purchased
 
-but they do not know:
+However, they often lack answers to critical business questions such as:
 
-- Which customers are likely to churn?
-- Which customers generate the highest value?
+- Which customers are most likely to churn?
+- Which customers generate the highest lifetime value?
 - How much future revenue is currently at risk?
-- Which customers should be targeted first?
-- What actions should be taken to retain them?
+- Which customers should be prioritized for retention?
+- What actions should be taken to maximize customer retention?
 
-This platform answers all of these questions using data-driven machine learning and AI.
+This platform addresses these challenges by combining machine learning and generative AI to transform customer transaction data into actionable business insights.
 
 ---
 
@@ -51,7 +50,7 @@ This platform answers all of these questions using data-driven machine learning 
 - RFM Segmentation
 - Customer Persona Prediction
 - Customer Churn Prediction
-- Customer Lifetime Value Prediction
+- Customer Lifetime Value (CLV) Prediction
 - Revenue-at-Risk Analysis
 
 ---
@@ -79,30 +78,30 @@ This platform answers all of these questions using data-driven machine learning 
 
 ## Artificial Intelligence
 
-- AI Business Recommendations
+- AI-Powered Business Recommendations
 - Executive Business Summary
 - Customer Retention Strategies
 - Revenue Growth Suggestions
-- Groq Llama 3.3 Integration
+- **GPT-OSS Integration via Groq API**
 
 ---
 
-## Real-Time Prediction
+## ⚡ Real-Time Prediction
 
 Supports prediction for completely **new customers**.
 
 Users can:
 
 - Enter customer transactions manually
-- Paste transactions directly from Excel
-- Generate predictions
-- Generate AI recommendations instantly
+- Paste customer transactions directly from Excel
+- Generate real-time customer predictions
+- Generate AI-powered business recommendations instantly
 
 ---
 
 # 🏗 System Architecture
 
-```
+```text
                         FRONTEND
 
                     Streamlit Dashboard
@@ -147,12 +146,12 @@ Users can:
                         │
                         ▼
 
-                 Groq Llama 3.3 LLM
+              GPT-OSS (Groq API)
 
                         │
                         ▼
 
-           AI Business Recommendation
+         AI Business Recommendation
 ```
 
 ---
@@ -336,7 +335,7 @@ AI Business Recommendation
 ## AI
 
 - Groq API
-- Llama 3.3 70B Versatile
+-GPT-OSS 120B
 
 ---
 
@@ -383,7 +382,7 @@ Customer-Intelligence-Revenue-Growth/
 
 # 🖥 Dashboard Pages
 
-The Streamlit dashboard consists of:
+The Streamlit dashboard includes:
 
 - 🏠 Home
 - 📊 Executive Dashboard
@@ -405,14 +404,12 @@ The Streamlit dashboard consists of:
 | GET | `/customers` | Customer List |
 | GET | `/customers/{customer_id}` | Customer Details |
 | GET | `/top-risk` | Top Revenue-at-Risk Customers |
-| POST | `/recommendation/{customer_id}` | Existing Customer AI Recommendation |
-| POST | `/predict-json` | Real-Time Prediction |
+| POST | `/recommendation/{customer_id}` | AI Recommendation for Existing Customer |
+| POST | `/predict-json` | Real-Time Customer Prediction |
 | POST | `/recommendation-json` | AI Recommendation for New Customer |
 | GET | `/executive-summary` | Executive Summary |
 
 ---
-
-
 
 # 🤖 Machine Learning Pipeline
 
@@ -420,10 +417,10 @@ The platform integrates multiple machine learning models to generate business in
 
 ## 1. Customer Persona Prediction
 
-- Customer feature engineering
-- RFM-based behavioral features
-- Persona classification
-- Customer segmentation
+- Customer Feature Engineering
+- RFM-Based Behavioral Features
+- Persona Classification
+- Customer Segmentation
 
 ---
 
@@ -431,14 +428,14 @@ The platform integrates multiple machine learning models to generate business in
 
 The churn prediction pipeline includes:
 
-- Data preprocessing
-- Feature engineering
-- Classification model
-- Hyperparameter tuning
-- Cross validation
-- Churn probability prediction
+- Data Preprocessing
+- Feature Engineering
+- Classification Model
+- Hyperparameter Tuning
+- Cross Validation
+- Churn Probability Prediction
 
-Output:
+**Outputs**
 
 - Churn Probability
 - Churn Label
@@ -455,7 +452,7 @@ Pipeline:
 - Regression Model
 - Future Revenue Prediction
 
-Output:
+**Output**
 
 - Predicted Customer Lifetime Value
 
@@ -463,58 +460,57 @@ Output:
 
 ## 4. Revenue-at-Risk Analysis
 
-The project combines CLV with churn probability to estimate financial risk.
+The platform combines predicted CLV with churn probability to estimate financial risk.
 
 ```text
 Revenue-at-Risk = Predicted CLV × Churn Probability
 ```
 
-This allows businesses to prioritize customers based on both:
+This enables businesses to prioritize customers based on:
 
-- Customer value
-- Churn likelihood
+- Customer Value
+- Churn Risk
 
 ---
 
 # 🤖 AI Business Recommendation Engine
 
-The project integrates **Groq Llama 3.3 70B Versatile** to transform predictive analytics into actionable business recommendations.
+The platform integrates **GPT-OSS 120B** through the **Groq API** to transform machine learning predictions into actionable business recommendations.
 
-The AI layer generates:
+The AI engine generates:
 
-- Personalized Retention Strategies
+- Personalized Customer Retention Strategies
+- Executive Business Summaries
+- Customer Engagement Recommendations
 - Revenue Growth Suggestions
-- Customer Engagement Plans
-- Executive Business Insights
-- Strategic Recommendations
+- Strategic Business Insights
 
-The recommendation engine works for both:
+The recommendation engine supports both:
 
-- Existing historical customers
-- Newly predicted customers (Real-Time Prediction)
+- Existing Historical Customers
+- New Customers through the Real-Time Prediction Pipeline
 
 ---
-
 
 # ⚙ Installation
 
 ## Clone Repository
 
 ```bash
-git clone https://github.com/aman12rajpoot/Customer-Intelligence-Revenue-Growth.git
+git clone https://github.com/aman12rajpoot/customer-intelligence-revenue-growth-platform.git
 ```
 
-Navigate to project
+Navigate to the project
 
 ```bash
-cd Customer-Intelligence-Revenue-Growth
+cd customer-intelligence-revenue-growth-platform
 ```
 
 ---
 
 ## Create Virtual Environment
 
-Windows
+### Windows
 
 ```bash
 python -m venv venv
@@ -526,11 +522,10 @@ Activate
 venv\Scripts\activate
 ```
 
-Linux / macOS
+### Linux / macOS
 
 ```bash
 python3 -m venv venv
-
 source venv/bin/activate
 ```
 
@@ -550,7 +545,7 @@ Create a `.env` file.
 
 ```env
 GROQ_API_KEY=your_groq_api_key
-GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_MODEL=openai/gpt-oss-120b
 ```
 
 ---
@@ -601,26 +596,17 @@ http://localhost:8501
 
 ## Backend
 
-Deploy FastAPI using:
+**Platform:** Render
 
-- Render
-
-"https://customer-intelligence-system-api.onrender.com"
+https://customer-intelligence-system-api.onrender.com
 
 ---
 
 ## Frontend
 
-Deploy Streamlit using:
+**Platform:** Streamlit Community Cloud
 
-- Streamlit Community Cloud
-
-
-"https://customer-intelligence-revenue-growth-platform-ea5pjfaayrverxr5.streamlit.app"
-
-
-
-
+https://customer-intelligence-revenue-growth-platform-ea5pjfaayrverxr5.streamlit.app
 
 ---
 
@@ -628,53 +614,51 @@ Deploy Streamlit using:
 
 The platform enables organizations to:
 
-- Identify high-risk customers
-- Predict customer churn
+- Identify High-Risk Customers
+- Predict Customer Churn
 - Estimate Customer Lifetime Value
 - Quantify Revenue-at-Risk
-- Prioritize retention campaigns
-- Generate AI-assisted business recommendations
-- Support executive decision making
-- Perform real-time customer prediction
+- Prioritize Customer Retention Campaigns
+- Generate AI-Powered Business Recommendations
+- Support Executive Decision-Making
+- Perform Real-Time Customer Prediction
 
 ---
 
 # 🎯 Skills Demonstrated
 
-This project demonstrates practical experience in:
-
-### Data Analytics
+## Data Analytics
 
 - Data Cleaning
-- Exploratory Data Analysis
+- Exploratory Data Analysis (EDA)
 - SQL Analytics
 - RFM Analysis
 
 ---
 
-### Machine Learning
+## Machine Learning
 
 - Feature Engineering
+- Customer Segmentation
 - Classification
 - Regression
-- Customer Segmentation
 - Model Evaluation
 - Hyperparameter Tuning
 - Cross Validation
 
 ---
 
-### Backend Development
+## Backend Development
 
 - FastAPI
-- REST APIs
+- REST API Development
 - Swagger Documentation
-- Pydantic Models
+- Pydantic
 - API Integration
 
 ---
 
-### Frontend Development
+## Frontend Development
 
 - Streamlit
 - Interactive Dashboards
@@ -683,21 +667,21 @@ This project demonstrates practical experience in:
 
 ---
 
-### Artificial Intelligence
+## Artificial Intelligence
 
 - Prompt Engineering
-- LLM Integration
+- GPT-OSS Integration
 - Groq API
-- Business Recommendation Generation
+- AI-Powered Business Recommendation Generation
 
 ---
 
-### Software Engineering
+## Software Engineering
 
 - Modular Project Structure
-- Frontend–Backend Separation
+- Frontend–Backend Architecture
 - Version Control (Git/GitHub)
-- Deployment Ready Architecture
+- Cloud Deployment
 
 ---
 
@@ -708,14 +692,12 @@ This project demonstrates practical experience in:
 - PostgreSQL/MySQL Integration
 - Docker Containerization
 - CI/CD Pipeline
-- Cloud Storage
 - Automated Model Retraining
 - Scheduled Batch Predictions
-- Email Notification System
 - Customer Communication Automation
 - Multi-language AI Recommendations
 
-
+---
 
 # 🙏 Acknowledgements
 
@@ -729,10 +711,10 @@ This project uses:
 - Pandas
 - NumPy
 - Groq API
-- Llama 3.3 70B Versatile
+- GPT-OSS 120B
 
 Special thanks to the open-source community for providing the tools and libraries that made this project possible.
 
+---
 
-
-> **Customer Intelligence & Revenue Growth Platform** demonstrates an end-to-end customer analytics workflow—from raw transaction data and feature engineering to machine learning predictions, AI-powered business recommendations, and an interactive web application—using a modern **Streamlit + FastAPI** architecture.
+> **Customer Intelligence & Revenue Growth Platform** demonstrates a complete end-to-end customer analytics workflow—from raw transaction data and feature engineering to machine learning predictions, AI-powered business recommendations, and real-time decision support—using a modern **Streamlit + FastAPI** architecture powered by **GPT-OSS** through the **Groq API**.
